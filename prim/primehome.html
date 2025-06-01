@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Prim's Algorithm - Choose Your Path</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Animated background particles */
+.bg-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+.particle {
+  position: absolute;
+  background: rgba(65, 90, 119, 0.1);
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
+}
+.particle:nth-child(1) { width: 20px; height: 20px; left: 10%; animation-delay: 0s; }
+.particle:nth-child(2) { width: 15px; height: 15px; left: 20%; animation-delay: 1s; }
+.particle:nth-child(3) { width: 25px; height: 25px; left: 30%; animation-delay: 2s; }
+.particle:nth-child(4) { width: 18px; height: 18px; left: 40%; animation-delay: 3s; }
+.particle:nth-child(5) { width: 12px; height: 12px; left: 50%; animation-delay: 4s; }
+.particle:nth-child(6) { width: 22px; height: 22px; left: 60%; animation-delay: 5s; }
+.particle:nth-child(7) { width: 16px; height: 16px; left: 70%; animation-delay: 1.5s; }
+.particle:nth-child(8) { width: 28px; height: 28px; left: 80%; animation-delay: 2.5s; }
+.particle:nth-child(9) { width: 14px; height: 14px; left: 90%; animation-delay: 3.5s; }
+@keyframes float {
+  0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+}
+
+/* Navigation Bar */
+.navbar {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(65, 90, 119, 0.2);
+  padding: 1rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
+.nav-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.nav-brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #415a77, #1b263b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.back-button {
+  background: #e8e82b;
+  color: black;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+.back-button:hover {
+  background: #388E3C;
+  transform: translateY(-1px);
+}
+
+/* Main Content */
+.main-content {
+  position: relative;
+  z-index: 1;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 120px);
+}
+.container {
+  max-width: 1200px;
+  width: 100%;
+}
+
+/* Hero Section */
+.hero-section {
+  text-align: center;
+  padding: 3rem 0;
+  margin-bottom: 3rem;
+}
+.hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #415a77, #1b263b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: titleGlow 2s ease-in-out infinite alternate;
+}
+@keyframes titleGlow {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.1); }
+}
+.hero-subtitle {
+  font-size: 1.2rem;
+  color: #415a77;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+/* Algorithm Info Section */
+.algorithm-info {
+  background: rgba(173, 255, 47, 0.6);
+  border-radius: 2rem;
+  padding: 3rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(65, 90, 119, 0.2);
+}
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+.info-card {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(65, 90, 119, 0.1);
+  transition: transform 0.3s ease;
+}
+.info-card:hover {
+  transform: translateY(-5px);
+}
+.info-card h3 {
+  color: #415a77;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.info-card p {
+  color: #1b263b;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+.info-card ul {
+  color: #1b263b;
+  padding-left: 1.5rem;
+}
+.info-card li {
+  margin-bottom: 0.5rem;
+}
+
+/* Robert Prim Portrait */
+.prim-portrait {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.portrait-container {
+  display: inline-block;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 10px 30px rgba(65, 90, 119, 0.2);
+  margin-bottom: 1rem;
+}
+.portrait-icon {
+  font-size: 4rem;
+  color: #415a77;
+}
+.portrait-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1b263b;
+  margin-bottom: 0.5rem;
+}
+.portrait-years {
+  color: #415a77;
+  font-style: italic;
+}
+
+/* Selection Section */
+.selection-section {
+  background: rgba(173, 255, 47, 0.8);
+  border-radius: 2rem;
+  padding: 3rem;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(65, 90, 119, 0.2);
+}
+.selection-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1b263b;
+  margin-bottom: 2rem;
+}
+.options-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+.option-card {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  border: 3px solid rgba(65, 90, 119, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+.option-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(65, 90, 119, 0.2);
+}
+.option-card.selected {
+  border-color: #43A047;
+  background: rgba(173, 255, 47, 0.2);
+}
+.option-card h3 {
+  color: #415a77;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.option-card p {
+  color: #1b263b;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+.option-features {
+  list-style: none;
+  padding: 0;
+}
+.option-features li {
+  padding: 0.5rem 0;
+  color: #415a77;
+  font-size: 0.9rem;
+  position: relative;
+  padding-left: 1.5rem;
+}
+.option-features li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #43A047;
+  font-weight: bold;
+}
+.custom-radio {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 3px solid #ccc;
+  transition: all 0.3s ease;
+}
+.option-card.selected .custom-radio {
+  border-color: #43A047;
+  background: #43A047;
+}
+.option-card.selected .custom-radio::after {
+  content: "✓";
+  color: white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+.hidden-input {
+  display: none;
+}
+
+/* Start Button */
+.start-button {
+  background: linear-gradient(135deg, #43A047, #388E3C);
+  color: white;
+  padding: 1rem 3rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 25px rgba(67, 160, 71, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.start-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 15px 35px rgba(67, 160, 71, 0.4);
+}
+.start-button:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  .main-content {
+    padding: 1rem;
+  }
+  .algorithm-info,
+  .selection-section {
+    padding: 2rem;
+  }
+  .info-grid,
+  .options-container {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+  <div class="bg-animation">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-brand">AlgoLearn Hub</div>
+      <a href="../home.html" class="back-button">
+        <span>←</span>
+        Back to Hub
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <h1 class="hero-title">🌳 Prim's Algorithm</h1>
+        <p class="hero-subtitle">
+          Discover the elegant greedy algorithm for finding minimum spanning trees, 
+          developed by mathematician Robert Clay Prim in 1957.
+        </p>
+      </section>
+
+      <!-- Algorithm Information Section -->
+      <section class="algorithm-info">
+        <!-- Robert Prim Portrait -->
+        <div class="prim-portrait">
+          <div class="portrait-name">Robert Clay Prim</div>
+          <div class="portrait-years">1921 - 2013</div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-card">
+            <h3>🎓 About Robert Prim</h3>
+            <p>
+              Robert Clay Prim was an American mathematician and computer scientist who made significant contributions to graph theory and optimization algorithms.
+            </p>
+            <ul>
+              <li>Born in Sweetwater, Texas in 1921</li>
+              <li>Worked at Bell Labs for most of his career</li>
+              <li>Published the MST algorithm in 1957</li>
+              <li>Also known for work in coding theory and telecommunications</li>
+              <li>The algorithm was independently discovered by Vojtěch Jarník in 1930</li>
+            </ul>
+          </div>
+
+          <div class="info-card">
+            <h3>⚡ Algorithm Overview</h3>
+            <p>
+              Prim's algorithm is a greedy algorithm that finds a minimum spanning tree for a weighted undirected graph.
+            </p>
+            <ul>
+              <li><strong>Time Complexity:</strong> O(E log V) with binary heap</li>
+              <li><strong>Space Complexity:</strong> O(V)</li>
+              <li><strong>Type:</strong> Greedy Algorithm</li>
+              <li><strong>Application:</strong> Network design, clustering, approximation algorithms</li>
+              <li><strong>Key Insight:</strong> Always choose the minimum weight edge that connects a visited vertex to an unvisited vertex</li>
+            </ul>
+          </div>
+
+          <div class="info-card">
+            <h3>🔍 How It Works</h3>
+            <p>
+              The algorithm builds the minimum spanning tree one vertex at a time, starting from an arbitrary vertex.
+            </p>
+            <ul>
+              <li>Start with any vertex as the initial tree</li>
+              <li>Repeatedly add the minimum weight edge that connects the tree to a new vertex</li>
+              <li>Continue until all vertices are included</li>
+              <li>The result is a tree with minimum total weight</li>
+              <li>No cycles are ever created during the process</li>
+            </ul>
+          </div>
+
+          <div class="info-card">
+            <h3>🌍 Real-World Applications</h3>
+            <p>
+              Prim's algorithm has numerous practical applications in various fields of engineering and computer science.
+            </p>
+            <ul>
+              <li><strong>Network Design:</strong> Designing efficient computer networks, electrical grids</li>
+              <li><strong>Transportation:</strong> Planning road networks, railway systems</li>
+              <li><strong>Clustering:</strong> Data analysis and machine learning</li>
+              <li><strong>Approximation Algorithms:</strong> Traveling salesman problem solutions</li>
+              <li><strong>Image Processing:</strong> Segmentation and feature extraction</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Selection Section -->
+      <section class="selection-section">
+        <h2 class="selection-title">Choose Your Learning Path</h2>
+        <div class="options-container">
+          <div class="option-card" data-option="exercices">
+            <div class="custom-radio"></div>
+            <h3>📚 Guided Exercises</h3>
+            <p>
+              Follow step-by-step guided exercises to learn Prim's algorithm through interactive examples and detailed explanations.
+            </p>
+            <ul class="option-features">
+              <li>Interactive step-by-step tutorials</li>
+              <li>Pre-designed graph examples</li>
+              <li>Detailed algorithm explanations</li>
+              <li>Progress tracking and hints</li>
+              <li>Perfect for beginners</li>
+            </ul>
+          </div>
+
+          <div class="option-card" data-option="graph">
+            <div class="custom-radio"></div>
+            <h3>🎨 Custom Graph Builder</h3>
+            <p>
+              Create your own graphs and watch Prim's algorithm solve them in real-time. Perfect for experimentation and advanced learning.
+            </p>
+            <ul class="option-features">
+              <li>Build custom weighted graphs</li>
+              <li>Real-time algorithm visualization</li>
+              <li>Modify weights and see changes</li>
+              <li>Export and share your graphs</li>
+              <li>Advanced customization options</li>
+            </ul>
+          </div>
+        </div>
+
+        <input type="radio" name="option" value="exercices" class="hidden-input" checked>
+        <input type="radio" name="option" value="graph" class="hidden-input">
+
+        <button class="start-button" id="startBtn">Start Learning Journey</button>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Option selection functionality
+    const optionCards = document.querySelectorAll('.option-card');
+    const hiddenInputs = document.querySelectorAll('.hidden-input');
+    const startButton = document.getElementById('startBtn');
+
+    // Initialize first option as selected
+    optionCards[0].classList.add('selected');
+
+    optionCards.forEach((card, index) => {
+      card.addEventListener('click', function() {
+        // Remove selected class from all cards
+        optionCards.forEach(c => c.classList.remove('selected'));
+        
+        // Add selected class to clicked card
+        this.classList.add('selected');
+        
+        // Update hidden radio buttons
+        hiddenInputs.forEach(input => input.checked = false);
+        hiddenInputs[index].checked = true;
+        
+        // Add visual feedback
+        this.style.transform = 'scale(1.02)';
+        setTimeout(() => {
+          this.style.transform = '';
+        }, 150);
+      });
+    });
+
+    // Start button functionality
+    startButton.addEventListener('click', function() {
+      const selectedOption = document.querySelector('.hidden-input:checked').value;
+      
+      // Add loading state
+      this.style.transform = 'scale(0.95)';
+      this.textContent = 'Loading...';
+      
+      setTimeout(() => {
+        if (selectedOption === 'exercices') {
+          window.location.href = 'sc.html';
+        } else if (selectedOption === 'graph') {
+          window.location.href = 'mongraphe.html';
+        }
+      }, 500);
+    });
+
+    // Add entrance animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    // Observe all cards for animation
+    document.querySelectorAll('.info-card, .option-card').forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(card);
+    });
+
+    // Add scroll effect to navbar
+    window.addEventListener('scroll', function() {
+      const navbar = document.querySelector('.navbar');
+      if (window.scrollY > 50) {
+        navbar.style.background = 'rgba(255, 255, 255, 0.98)';
+        navbar.style.boxShadow = '0 2px 30px rgba(0, 0, 0, 0.15)';
+      } else {
+        navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+        navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+      }
+    });
+  </script>
+</body>
+</html>
