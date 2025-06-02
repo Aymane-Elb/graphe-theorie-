@@ -8,7 +8,7 @@ let startTime = null;
 let timeInterval = null;
 let currentAlgorithm = '';
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCJKDhLjIccsR5SNEBaZUsACtTA9_1ROhM';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=';
 
 // Canvas pour la visualisation de l'arbre
 let canvas, ctx;
